@@ -1,66 +1,76 @@
+const { v4: uuidv4 } = require("uuid");
+const Validator = require("./validator");
+const CartItem = require("./cart-item");
+
 class Cart {
   #id;
-  #primaryPrice;
   constructor() {
-    this.item = [];
+    this.items = [];
     this.cartDiscount = 0;
     this.#id = uuidv4();
-    this.totalPrice = 0;
-    this.discountCode = new Set();
+    this.cartPrice = 0;
+    this.discountCodes = [];
+  }
+
+  addItem(item, amount) {
+    Validator.throwIfNotPropreInstance(item, CartItem);
+    Validator.throwIfNotInt(amount);
+    Validator.throwIfNumbrNonPositive(amount);
+    this.items.push({ item: item, amount: amount });
   }
 
   setDiscountCode(discountCode) {
-    //czy jest poprawny
-    //ustawic
-    const usedDiscundCode = Utilities.findInArrByName(discounts, discountCode);
-    if (usedDiscundCode) {
-      this.item.forEach((item) => item.setItemDiscount(usedDiscundCode));
-      this.discountCode.add(usedDiscundCode.name);
+    if (!this.isDiscountUsed(discountCode)) {
+      this.discountCodes.push(discountCode);
+      this.items.forEach((cartItem) => {
+        cartItem.item.setDiscountCode(discountCode);
+      });
     }
   }
 
-  addItem(item) {
-    //walidacja czy to item
-    //amount?
-    this.item.push(item);
+  calculateItemsDiscounts() {
+    this.items.forEach((cartItem) => cartItem.item.calculateItemDiscount());
   }
 
   calculatePrice() {
-    this.totalPrice = this.items.reduce((total, current) => {
-      return (total += current.calculatePrice());
+    this.cartPrice = this.items.reduce((total, current) => {
+      return total + current.item.price * current.amount;
     }, 0);
   }
 
-  calculateDiscount() {
-    this.cartDiscount = `${
-      100 - (this.totalPrice * 100) / this.#primaryPrice
-    }%`;
+  calculateDiscountPrice() {
+    this.cartPriceAfterDiscount = this.items.reduce((total, current) => {
+      return (
+        total +
+        current.item.discountPrice *
+          (1 - current.item.discountInPrecent / 100) *
+          current.amount
+      );
+    }, 0);
+  }
+
+  calculateCartDiscount() {
+    this.cartDiscount =
+      ((this.cartPrice - this.cartPriceAfterDiscount) / this.cartPrice) * 100;
+  }
+
+  //   setDiscountCode(discountCode) {}
+
+  //   calculatePrice() {
+  //     this.totalPrice = this.items.reduce((total, current) => {
+  //       return (total += current.calculatePrice());
+  //     }, 0);
+  //   }
+
+  //   calculateDiscount() {
+  //     this.cartDiscount = `${
+  //       100 - (this.totalPrice * 100) / this.#primaryPrice
+  //     }%`;
+  //   }
+
+  isDiscountUsed(discountCode) {
+    return this.discountCodes.some((discount) => discount === discountCode);
   }
 }
 
-class Utilities {
-  static findInArrByName = (arr, phrase) => {
-    return arr.find((item) => item.name === phrase);
-  };
-
-  static findInArrByCategory = (arr, phrase) => {
-    return arr.find((item) => item === phrase);
-  };
-
-  static doesNotExistInArr = (arr, input) => {
-    return !arr.some((item) => item === input);
-  };
-}
-
-const discounts = [
-  {
-    name: "Fruit10",
-    category: "Owoc",
-    value: 10,
-  },
-  {
-    name: "All15",
-    category: "All",
-    value: 15,
-  },
-];
+module.exports = Cart;

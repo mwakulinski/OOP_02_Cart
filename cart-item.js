@@ -7,7 +7,7 @@ class CartItem {
     this._name = name;
     this._categories = [...category, name, "All"];
     this._price = price;
-    this.discount = 0;
+    this.discountPrice = this.price;
     this.#id = uuidv4();
     this.discounts = [];
   }
@@ -28,19 +28,13 @@ class CartItem {
     this.price = price;
   }
 
-  // set _amount(amount) {
-  //   Validator.throwIfNumbrNonPositive(amount);
-  //   Validator.throwIfNotInt(amount);
-  //   this.price = price;
-  // }
-
   get id() {
     return this.#id;
   }
 
   addItemCategory(category) {
     Validator.throwIfNotProperType(category, "string");
-    this.throwIfProductHaveThisCategory(category);
+    this.throwIfItemHaveThisCategory(category);
     this.categories.push(category);
   }
 
@@ -53,22 +47,15 @@ class CartItem {
     }
   }
 
-  calculateItemPrice() {
-    this.price *= 1 - this.discount / 100;
+  calculateItemPriceAfterDiscount() {
+    this.discountPrice *= 1 - this.discountInPrecent / 100;
   }
-  //ustala cene po znizce, ustala jaka jest procentowa znizka i dodaje znizke do uzytych
-  //calculatePrice()
-  //{valueInPercent: number, category: string, name}
 
   calculateItemDiscount() {
-    const discountValueArr = this.discounts.map(
-      (discount) => discount.valueInPrecent
-    );
-
-    this.discount =
+    this.discountInPrecent =
       100 -
-      discountValueArr.reduce((total, currnet) => {
-        return total * ((100 - currnet) / 100);
+      this.discounts.reduce((total, currnet) => {
+        return total * ((100 - currnet.valueInPrecent) / 100);
       }, 100);
   }
 
@@ -80,7 +67,7 @@ class CartItem {
     return this.categories.some((category) => category === discount.category);
   }
 
-  throwIfProductHaveThisCategory(newCategory) {
+  throwIfItemHaveThisCategory(newCategory) {
     if (this.categories.some((category) => category === newCategory)) {
       throw new Error(`This item already is in ${newCategory} category`);
     }
