@@ -1,76 +1,58 @@
-const { v4: uuidv4 } = require("uuid");
+const Item = require("./item");
 const Validator = require("./validator");
 
-class CartItem {
-  #id;
-  constructor(name, price, category) {
-    this._name = name;
-    this._categories = [...category, name, "All"];
-    this._price = price;
-    this.discountPrice = this.price;
-    this.#id = uuidv4();
+class CartItem extends Item {
+  constructor(name, categories, price, quantity) {
+    super(name, categories);
+    this.price = price;
+    this.quantity = quantity;
     this.discounts = [];
   }
 
-  set _name(name) {
-    Validator.throwIfNotProperType(name, "string");
-    this.name = name;
-  }
-
-  set _categories(category) {
-    Validator.throwIfNotArr(category);
-    Validator.checkIfHaveOnlyString(category);
-    this.categories = [...category];
-  }
-
-  set _price(price) {
+  set price(price) {
     Validator.throwIfNumbrNonPositive(price);
-    this.price = price;
+    this._price = price;
   }
 
-  get id() {
-    return this.#id;
+  get price() {
+    return this._price;
   }
 
-  addItemCategory(category) {
-    Validator.throwIfNotProperType(category, "string");
-    this.throwIfItemHaveThisCategory(category);
-    this.categories.push(category);
+  set quantity(quantity) {
+    Validator.throwIfNumbrNonPositive(quantity);
+    Validator.throwIfNotInt(quantity);
+    this._quantity = quantity;
+  }
+
+  get quantity() {
+    return this._quantity;
   }
 
   setDiscountCode(discount) {
     if (
-      !this.isDiscountUsed(discount) &&
-      this.chechIfProductHaveDiscountCategory(discount)
+      !this.#isDiscountUsed(discount) &&
+      this.#checkIfProductHaveDiscountCategory(discount)
     ) {
       this.discounts.push(discount);
     }
   }
 
   calculateItemPriceAfterDiscount() {
-    this.discountPrice *= 1 - this.discountInPrecent / 100;
+    return this.price * (this.#calculatePercentItemDiscount() / 100);
   }
 
-  calculateItemDiscount() {
-    this.discountInPrecent =
-      100 -
-      this.discounts.reduce((total, currnet) => {
-        return total * ((100 - currnet.valueInPrecent) / 100);
-      }, 100);
+  #calculatePercentItemDiscount() {
+    return this.discounts.reduce((total, { valueInPrecent }) => {
+      return total * ((100 - valueInPrecent) / 100);
+    }, 100);
   }
 
-  isDiscountUsed(discountCode) {
+  #isDiscountUsed(discountCode) {
     return this.discounts.some((discount) => discount === discountCode);
   }
 
-  chechIfProductHaveDiscountCategory(discount) {
+  #checkIfProductHaveDiscountCategory(discount) {
     return this.categories.some((category) => category === discount.category);
-  }
-
-  throwIfItemHaveThisCategory(newCategory) {
-    if (this.categories.some((category) => category === newCategory)) {
-      throw new Error(`This item already is in ${newCategory} category`);
-    }
   }
 }
 

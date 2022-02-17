@@ -11,7 +11,7 @@ class Validator {
     }
   }
 
-  static checkIfHaveOnlyString(inputs) {
+  static checkIfHaveOnlyStringsInArr(inputs) {
     if (
       inputs.some((input) => typeof input !== "string" || input.length === 0)
     ) {

@@ -19,28 +19,20 @@ const discounts = [
   },
 ];
 
-const cartItem1 = new CartItem("Czekolada", 10, ["Jedzenie", "Słodycze"]);
-const cartItem2 = new CartItem("Jabłko", 15, ["Jedzenie", "Owoc"]);
-const cartItem3 = new CartItem("Brzoskwinia", 10, ["Jedzenie", "Owoc"]);
-// cartItem1.addItemCategory("Zdrowe");
-// cartItem1.setDiscountCode(discounts[1]);
-// cartItem1.setDiscountCode(discounts[2]);
-// cartItem1.calculateItemDiscount();
-// cartItem1.calculateItemPriceAfterDiscount();
-// console.log(cartItem1.discount);
-// cartItem1.calculateItemPrice();
-// console.log(cartItem1);
+const cartItem1 = new CartItem("Czekolada", ["Jedzenie", "Słodycze"], 10, 5);
+const cartItem2 = new CartItem("Jabłko", ["Jedzenie", "Owoc"], 15, 5);
+const cartItem3 = new CartItem("Brzoskwinia", ["Jedzenie", "Owoc"], 10, 10);
+cartItem1.addItemCategory("Zdrowe");
 
 const cart = new Cart();
-cart.addItem(cartItem1, 2);
-cart.addItem(cartItem2, 1);
-cart.addItem(cartItem3, 4);
-cart.setDiscountCode(discounts[1]);
-cart.setDiscountCode(discounts[2]);
-cart.calculateItemsDiscounts();
+cart.addItem(cartItem1);
+cart.addItem(cartItem2);
+cart.addItem(cartItem3);
+cart.setDiscountCodeToItems(discounts[1]);
+cart.setDiscountCodeToItems(discounts[2]);
+cart.deleteItem(cartItem1.id);
 cart.calculatePrice();
-cart.calculateDiscountPrice();
-cart.calculateCartDiscount();
+cart.calculateDiscountInPrecent();
 
 // cart.calculatePrice();
 // cart.setDiscountCode("Fruit10");

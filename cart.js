@@ -3,73 +3,60 @@ const Validator = require("./validator");
 const CartItem = require("./cart-item");
 
 class Cart {
-  #id;
   constructor() {
     this.items = [];
-    this.cartDiscount = 0;
-    this.#id = uuidv4();
-    this.cartPrice = 0;
-    this.discountCodes = [];
+    this.id = uuidv4();
   }
 
-  addItem(item, amount) {
-    Validator.throwIfNotPropreInstance(item, CartItem);
-    Validator.throwIfNotInt(amount);
-    Validator.throwIfNumbrNonPositive(amount);
-    this.items.push({ item: item, amount: amount });
+  addItem(cartItem) {
+    Validator.throwIfNotPropreInstance(cartItem, CartItem);
+    this.items.push(cartItem);
   }
 
-  setDiscountCode(discountCode) {
-    if (!this.isDiscountUsed(discountCode)) {
-      this.discountCodes.push(discountCode);
-      this.items.forEach((cartItem) => {
-        cartItem.item.setDiscountCode(discountCode);
-      });
+  deleteItem(cartItemId) {
+    Validator.throwIfNotProperType(cartItemId, "string");
+    if (!this.findItemById(cartItemId)) {
+      throw new Error("Such item is not in the cart");
     }
+    this.items = this.items.filter((item) => item.id !== cartItemId);
   }
 
-  calculateItemsDiscounts() {
-    this.items.forEach((cartItem) => cartItem.item.calculateItemDiscount());
+  setDiscountCodeToItems(discountCode) {
+    this.items.forEach((cartItem) => {
+      cartItem.setDiscountCode(discountCode);
+    });
   }
 
   calculatePrice() {
-    this.cartPrice = this.items.reduce((total, current) => {
-      return total + current.item.price * current.amount;
+    this.price = this.#calculatePriceWithDiscounts();
+  }
+
+  calculateDiscountInPrecent() {
+    this.discount =
+      100 -
+      (this.#calculatePriceWithDiscounts() /
+        this.#calculatePriceWithoutDiscounts()) *
+        100;
+  }
+
+  #calculatePriceWithoutDiscounts() {
+    return this.items.reduce((total, cartItem) => {
+      return total + cartItem.price * cartItem.quantity;
     }, 0);
   }
 
-  calculateDiscountPrice() {
-    this.cartPriceAfterDiscount = this.items.reduce((total, current) => {
+  #calculatePriceWithDiscounts() {
+    return this.items.reduce((total, cartItem) => {
       return (
-        total +
-        current.item.discountPrice *
-          (1 - current.item.discountInPrecent / 100) *
-          current.amount
+        total + cartItem.calculateItemPriceAfterDiscount() * cartItem.quantity
       );
     }, 0);
   }
 
-  calculateCartDiscount() {
-    this.cartDiscount =
-      ((this.cartPrice - this.cartPriceAfterDiscount) / this.cartPrice) * 100;
-  }
-
-  //   setDiscountCode(discountCode) {}
-
-  //   calculatePrice() {
-  //     this.totalPrice = this.items.reduce((total, current) => {
-  //       return (total += current.calculatePrice());
-  //     }, 0);
-  //   }
-
-  //   calculateDiscount() {
-  //     this.cartDiscount = `${
-  //       100 - (this.totalPrice * 100) / this.#primaryPrice
-  //     }%`;
-  //   }
-
-  isDiscountUsed(discountCode) {
-    return this.discountCodes.some((discount) => discount === discountCode);
+  findItemById(cartItemId) {
+    return this.items.some((item) => {
+      return item.id === cartItemId;
+    });
   }
 }
 
